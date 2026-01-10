@@ -50,7 +50,21 @@ func main() {
 		log.Printf("Get update: %+v", update)
 
 		if update.Message != nil && update.Message.IsCommand() {
-
+			if update.Message.Command() == "start" {
+				keyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Кнопка 1", "btn1"),
+						tgbotapi.NewInlineKeyboardButtonData("Кнопка 2", "btn2"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Кнопка 3", "btn3"),
+						tgbotapi.NewInlineKeyboardButtonData("Кнопка 4", "btn4"),
+					),
+				)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Выберите кнопку:")
+				msg.ReplyMarkup = keyboard
+				bot.Send(msg)
+			}
 		}
 
 		if update.Message != nil && keySender == update.Message.From.ID {
@@ -58,7 +72,8 @@ func main() {
 		}
 
 		if update.CallbackQuery != nil {
-
+			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
+			bot.Request(callback)
 		}
 	}
 }
