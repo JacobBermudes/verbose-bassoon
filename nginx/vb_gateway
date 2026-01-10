@@ -1,0 +1,42 @@
+server {
+    listen 8443 ssl;
+    server_name www.phunkao.fun;
+
+    ssl_certificate /etc/letsencrypt/live/www.phunkao.fun/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/www.phunkao.fun/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    location /vb-api {
+       # allow 127.0.0.1;
+       # deny all;
+
+        add_header 'Access-Control-Allow-Origin' 'https://phunkao.fun' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+        proxy_pass http://127.0.0.1:8001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    location /vb-wh {
+        proxy_pass http://127.0.0.1:8011;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    access_log /var/log/nginx/vb_access.log;
+    error_log /var/log/nginx/vb_error.log;
+}
