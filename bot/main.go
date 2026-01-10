@@ -23,7 +23,7 @@ func main() {
 	bot.Debug = true
 	log.Printf("Auth as: @%s", bot.Self.UserName)
 
-	webhookURL := "https://www.phunkao.fun:8443/ss-wh"
+	webhookURL := "https://www.phunkao.fun:8443/vb-wh"
 	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
 	webhook.AllowedUpdates = []string{"message", "callback_query"}
@@ -34,7 +34,7 @@ func main() {
 	}
 	log.Println("Webhook setted:", webhookURL)
 
-	updates := bot.ListenForWebhook("/ss-wh")
+	updates := bot.ListenForWebhook("/vb-wh")
 
 	go func() {
 		log.Println("Go back listening :8011 (HTTP)")
