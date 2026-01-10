@@ -44,8 +44,6 @@ func main() {
 		}
 	}()
 
-	keySender := int64(0)
-
 	for update := range updates {
 		log.Printf("Get update: %+v", update)
 
@@ -67,15 +65,24 @@ func main() {
 			}
 		}
 
-		if update.Message != nil && keySender == update.Message.From.ID {
-
+		if update.Message != nil {
+			switch update.Message.Text {
+			case "Магазин":
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Добро пожаловать в магазин! Выберите категорию товара:")
+				keyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Stars", "category_stars"),
+						tgbotapi.NewInlineKeyboardButtonData("Accounts", "category_accounts"),
+					),
+				)
+				msg.ReplyMarkup = keyboard
+				bot.Send(msg)
+			}
 		}
 
 		if update.CallbackQuery != nil {
 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
 			bot.Request(callback)
-			msg := tgbotapi.NewMessage(update.FromChat().ID, update.CallbackQuery.Data)
-			bot.Send(msg)
 		}
 	}
 }
