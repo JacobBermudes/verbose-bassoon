@@ -53,15 +53,15 @@ func main() {
 			if update.Message.Command() == "start" {
 				keyboard := tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Кнопка 1"),
-						tgbotapi.NewKeyboardButton("Кнопка 2"),
+						tgbotapi.NewKeyboardButton("Магазин"),
+						tgbotapi.NewKeyboardButton("Профиль"),
 					),
 					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Кнопка 3"),
-						tgbotapi.NewKeyboardButton("Кнопка 4"),
+						tgbotapi.NewKeyboardButton("Тех.Поддержка"),
+						tgbotapi.NewKeyboardButton("Личный ВПН"),
 					),
 				)
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Выберите кнопку:")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Ты попал в автоматизированный магазин цифровых товаров!")
 				msg.ReplyMarkup = keyboard
 				bot.Send(msg)
 			}
@@ -74,6 +74,8 @@ func main() {
 		if update.CallbackQuery != nil {
 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
 			bot.Request(callback)
+			msg := tgbotapi.NewMessage(update.FromChat().ID, update.CallbackQuery.Data)
+			bot.Send(msg)
 		}
 	}
 }
