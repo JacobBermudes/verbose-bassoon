@@ -51,14 +51,14 @@ func main() {
 
 		if update.Message != nil && update.Message.IsCommand() {
 			if update.Message.Command() == "start" {
-				keyboard := tgbotapi.NewInlineKeyboardMarkup(
-					tgbotapi.NewInlineKeyboardRow(
-						tgbotapi.NewInlineKeyboardButtonData("Кнопка 1", "btn1"),
-						tgbotapi.NewInlineKeyboardButtonData("Кнопка 2", "btn2"),
+				keyboard := tgbotapi.NewReplyKeyboard(
+					tgbotapi.NewKeyboardButtonRow(
+						tgbotapi.NewKeyboardButton("Кнопка 1"),
+						tgbotapi.NewKeyboardButton("Кнопка 2"),
 					),
-					tgbotapi.NewInlineKeyboardRow(
-						tgbotapi.NewInlineKeyboardButtonData("Кнопка 3", "btn3"),
-						tgbotapi.NewInlineKeyboardButtonData("Кнопка 4", "btn4"),
+					tgbotapi.NewKeyboardButtonRow(
+						tgbotapi.NewKeyboardButton("Кнопка 3"),
+						tgbotapi.NewKeyboardButton("Кнопка 4"),
 					),
 				)
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Выберите кнопку:")
