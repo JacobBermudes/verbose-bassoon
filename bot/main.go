@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"verbose-bassoon/bot/account"
+	"verbose-bassoon/bot/shop"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -68,14 +70,13 @@ func main() {
 		if update.Message != nil {
 			switch update.Message.Text {
 			case "Магазин":
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Добро пожаловать в магазин! Выберите категорию товара:")
-				keyboard := tgbotapi.NewInlineKeyboardMarkup(
-					tgbotapi.NewInlineKeyboardRow(
-						tgbotapi.NewInlineKeyboardButtonData("Stars", "category_stars"),
-						tgbotapi.NewInlineKeyboardButtonData("Accounts", "category_accounts"),
-					),
-				)
-				msg.ReplyMarkup = keyboard
+				msg := shop.ShowShopMenu(update.Message.Chat.ID)
+				bot.Send(msg)
+			case "Профиль":
+				msg := account.ShowAccountInfo(update.Message.Chat.ID, update.Message.From.ID)
+				bot.Send(msg)
+			case "Тех.Поддержка":
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
 				bot.Send(msg)
 			}
 		}

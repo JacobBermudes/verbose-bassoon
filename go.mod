@@ -1,4 +1,4 @@
-module starBazaar
+module verbose-bassoon
 
 go 1.25.5
 
