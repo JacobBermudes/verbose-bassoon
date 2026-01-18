@@ -27,7 +27,7 @@ jobs:
         export CGO_ENABLED=0
         export GOOS=linux 
         export GOARCH=amd64
-        go build -o bot ./bot && go build -o vb-api ./api
+        go build -o vb-bot ./bot && go build -o vb-api ./api
         echo "Build completed."
 
     - name: Copy API binary to VPS
@@ -48,7 +48,7 @@ jobs:
         script: |
           sudo systemctl stop vbd || true
           sudo systemctl stop vb_api || true
-          chmod +x /etc/verbosebasson/bot
+          chmod +x /etc/verbosebasson/vb-bot
           chmod +x /etc/verbosebasson/vb-api
           sudo systemctl start vbd
           sudo systemctl start vb_api
