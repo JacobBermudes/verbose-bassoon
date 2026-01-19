@@ -22,7 +22,7 @@ func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 	}
 
 	balResp, err := http.Get(apiAddres + ":" + apiPort + "/vb-api/balance?uid=" + fmt.Sprint(userID))
-	if err != nil {
+	if err != nil && apiAddres != "" && apiPort != "" {
 		fmt.Println("Error fetching balance:", err)
 	}
 	defer balResp.Body.Close()
