@@ -30,6 +30,16 @@ jobs:
         go build -o vb-bot ./bot && go build -o vb-api ./api
         echo "Build completed."
 
+    - name: Restart service on VPS
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          sudo systemctl stop vbd || true
+          sudo systemctl stop vb_api || true
+
     - name: Copy API binary to VPS
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -46,8 +56,6 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          sudo systemctl stop vbd || true
-          sudo systemctl stop vb_api || true
           chmod +x /etc/verbosebasson/vb-bot
           chmod +x /etc/verbosebasson/vb-api
           sudo systemctl start vbd
