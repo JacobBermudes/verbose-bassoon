@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"verbose-bassoon/bot/account"
 	"verbose-bassoon/bot/shop"
 
@@ -91,6 +92,28 @@ func main() {
 		}
 
 		if update.CallbackQuery != nil {
+
+			cbDataParts := strings.Split(update.CallbackQuery.Data, ":")
+
+			if len(cbDataParts) == 1 {
+				switch cbDataParts[0] {
+				case "paymentMenu":
+
+					msg := account.ShowPaymentMenu(update.CallbackQuery.Message.Chat.ID)
+
+					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+						update.CallbackQuery.Message.Chat.ID,
+						update.CallbackQuery.Message.MessageID,
+						msg.Text,
+						msg.ReplyMarkup.(tgbotapi.InlineKeyboardMarkup),
+					)
+					bot.Send(editMsg)
+				case "help":
+					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
+					bot.Send(msg)
+				}
+			}
+
 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
 			bot.Request(callback)
 		}

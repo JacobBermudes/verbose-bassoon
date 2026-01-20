@@ -57,3 +57,17 @@ func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 
 	return msg
 }
+
+func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
+	msg := tgbotapi.NewMessage(chatID, "Выберите сумму для пополнения баланса:")
+
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT (telegram)", "payments:cb"),
+			tgbotapi.NewInlineKeyboardButtonData("СБП QR", "payments:sbp"),
+		),
+	)
+	msg.ReplyMarkup = keyboard
+
+	return msg
+}
