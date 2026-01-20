@@ -78,6 +78,15 @@ func main() {
 			case "Тех.Поддержка":
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
 				bot.Send(msg)
+			case "Личный ВПН":
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ваш личный VPN менеджер!")
+				keyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonURL("Перейти в VPN Менеджер", "https://t.me/surfboost_bot?start=ref287657335"),
+					),
+				)
+				msg.ReplyMarkup = keyboard
+				bot.Send(msg)
 			}
 		}
 
