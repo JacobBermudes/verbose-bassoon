@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -68,6 +69,15 @@ func main() {
 			}
 		}
 
+		if update.Message != nil && update.Message.ReplyToMessage != nil {
+			if update.Message.ReplyToMessage.Text == "Введите сумму для пополнения баланса в рублях (мин. 100 руб.):" {
+				amount := strings.TrimSpace(update.Message.Text)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+amount+" рублей.\n\nДля продолжения перейдите по ссылке ниже и завершите оплату:\nhttps://www.phunkao.fun/payments?uid="+
+					fmt.Sprint(update.Message.From.ID)+"&amount="+amount)
+				bot.Send(msg)
+			}
+		}
+
 		if update.Message != nil {
 			switch update.Message.Text {
 			case "🔌 Магазин":
@@ -117,8 +127,9 @@ func main() {
 			if len(cbDataParts) == 2 {
 				switch cbDataParts[0] + ":" + cbDataParts[1] {
 				case "payments:cb":
-					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму в рублях (мин. 50)")
-					bot.Send(msg)
+					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 100 руб.):")
+					input_sum_msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, Selective: true}
+					bot.Send(input_sum_msg)
 				}
 			}
 
