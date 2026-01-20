@@ -54,12 +54,12 @@ func main() {
 			if update.Message.Command() == "start" {
 				keyboard := tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Магазин"),
-						tgbotapi.NewKeyboardButton("Профиль"),
+						tgbotapi.NewKeyboardButton("🔌 Магазин"),
+						tgbotapi.NewKeyboardButton("👤 Профиль"),
 					),
 					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Тех.Поддержка"),
-						tgbotapi.NewKeyboardButton("Личный ВПН"),
+						tgbotapi.NewKeyboardButton("🧩 Тех.Поддержка"),
+						tgbotapi.NewKeyboardButton("🕸 Личный ВПН"),
 					),
 				)
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Ты попал в автоматизированный магазин цифровых товаров!")
@@ -70,16 +70,16 @@ func main() {
 
 		if update.Message != nil {
 			switch update.Message.Text {
-			case "Магазин":
+			case "🔌 Магазин":
 				msg := shop.ShowShopMenu(update.Message.Chat.ID)
 				bot.Send(msg)
-			case "Профиль":
+			case "👤 Профиль":
 				msg := account.ShowAccountInfo(update.Message.Chat.ID, update.Message.From.ID)
 				bot.Send(msg)
-			case "Тех.Поддержка":
+			case "🧩 Тех.Поддержка":
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
 				bot.Send(msg)
-			case "Личный ВПН":
+			case "🕸 Личный ВПН":
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ваш личный VPN менеджер!")
 				keyboard := tgbotapi.NewInlineKeyboardMarkup(
 					tgbotapi.NewInlineKeyboardRow(
@@ -110,6 +110,14 @@ func main() {
 					bot.Send(editMsg)
 				case "help":
 					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
+					bot.Send(msg)
+				}
+			}
+
+			if len(cbDataParts) == 2 {
+				switch cbDataParts[0] + cbDataParts[1] {
+				case "payments:cb":
+					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму в рублях (мин. 50)")
 					bot.Send(msg)
 				}
 			}
