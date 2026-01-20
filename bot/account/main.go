@@ -41,7 +41,7 @@ func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💲 Пополнение баланса", "paymentMenu"),
+			tgbotapi.NewInlineKeyboardButtonData("💲 Пополнение баланса", "payments"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("💸 История заказов", "donate"),

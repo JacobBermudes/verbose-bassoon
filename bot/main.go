@@ -97,7 +97,7 @@ func main() {
 
 			if len(cbDataParts) == 1 {
 				switch cbDataParts[0] {
-				case "paymentMenu":
+				case "payments":
 
 					msg := account.ShowPaymentMenu(update.CallbackQuery.Message.Chat.ID)
 
