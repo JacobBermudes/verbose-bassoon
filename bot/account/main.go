@@ -38,5 +38,22 @@ func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 	}
 
 	msg := tgbotapi.NewMessage(chatID, "Ваш профиль:\nID пользователя: "+fmt.Sprint(userID)+"\nБаланс: "+fmt.Sprint(balance)+" рублей")
+
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("💲 Пополнение баланса", "paymentMenu"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("💸 История заказов", "donate"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("💵 Акция «Приведи друга»", "referral"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
+		),
+	)
+	msg.ReplyMarkup = keyboard
+
 	return msg
 }
