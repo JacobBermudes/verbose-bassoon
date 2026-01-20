@@ -115,7 +115,7 @@ func main() {
 			}
 
 			if len(cbDataParts) == 2 {
-				switch cbDataParts[0] + cbDataParts[1] {
+				switch cbDataParts[0] + ":" + cbDataParts[1] {
 				case "payments:cb":
 					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму в рублях (мин. 50)")
 					bot.Send(msg)
