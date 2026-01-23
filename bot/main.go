@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"verbose-bassoon/bot/account"
 	"verbose-bassoon/bot/shop"
@@ -70,10 +73,42 @@ func main() {
 		}
 
 		if update.Message != nil && update.Message.ReplyToMessage != nil {
-			if update.Message.ReplyToMessage.Text == "Введите сумму для пополнения баланса в рублях (мин. 100 руб.):" {
-				amount := strings.TrimSpace(update.Message.Text)
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+amount+" рублей.\n\nДля продолжения перейдите по ссылке ниже и завершите оплату:\nhttps://www.phunkao.fun/payments?uid="+
-					fmt.Sprint(update.Message.From.ID)+"&amount="+amount)
+			if update.Message.ReplyToMessage.Text == "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):" {
+				paymentSum := strings.TrimSpace(update.Message.Text)
+
+				var createInvoiceResp struct {
+					Amount   int64  `json:"amount"`
+					Uid      string `json:"uid"`
+					VbMethod string `json:"vbMethod"`
+				}
+				createInvoiceResp.Amount, _ = strconv.ParseInt(paymentSum, 10, 64)
+				createInvoiceResp.Uid = fmt.Sprint(update.Message.From.ID)
+				createInvoiceResp.VbMethod = "createInvoice"
+
+				// Call API to create invoice
+				payloadBytes, err := json.Marshal(createInvoiceResp)
+				if err != nil {
+					log.Println("Error encoding JSON:", err)
+					continue
+				}
+
+				internalResp, err := http.Post("https://www.phunkao.fun:8443/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
+				var invoiceLink struct {
+					InvoiceURL string `json:"pay_url"`
+				}
+				if err != nil {
+					log.Println("Error creating invoice:", err)
+				} else {
+					defer internalResp.Body.Close()
+					err = json.NewDecoder(internalResp.Body).Decode(&invoiceLink)
+					if err != nil {
+						log.Println("Error decoding invoice response:", err)
+					}
+				}
+
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+paymentSum+" рублей.\n\nПерейдите по ссылке для оплаты:")
+				msg.ParseMode = "Markdown"
+				msg.Text += "\n[Оплатить " + paymentSum + " руб.](" + invoiceLink.InvoiceURL + ")"
 				bot.Send(msg)
 			}
 		}
