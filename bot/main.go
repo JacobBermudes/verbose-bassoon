@@ -91,19 +91,18 @@ func main() {
 					log.Println("Error encoding JSON:", err)
 					continue
 				}
-
 				internalResp, err := http.Post("https://www.phunkao.fun:8443/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
+				if err != nil {
+					log.Println("Error creating invoice:", err)
+				}
+				defer internalResp.Body.Close()
+
 				var invoiceLink struct {
 					InvoiceURL string `json:"pay_url"`
 				}
+				err = json.NewDecoder(internalResp.Body).Decode(&invoiceLink)
 				if err != nil {
-					log.Println("Error creating invoice:", err)
-				} else {
-					defer internalResp.Body.Close()
-					err = json.NewDecoder(internalResp.Body).Decode(&invoiceLink)
-					if err != nil {
-						log.Println("Error decoding invoice response:", err)
-					}
+					log.Println("Error decoding invoice response:", err)
 				}
 
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+paymentSum+" рублей.\n\nПерейдите по ссылке для оплаты:")
