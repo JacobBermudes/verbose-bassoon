@@ -107,18 +107,36 @@ func main() {
 
 				log.Printf("API Response Status: %d, Body: %s\n", internalResp.StatusCode, string(respBody))
 
-				var invoiceLink struct {
-					PayURL string `json:"pay_url"`
-				}
-				err = json.Unmarshal(respBody, &invoiceLink)
+				var responseData map[string]interface{}
+				err = json.Unmarshal(respBody, &responseData)
 				if err != nil {
 					log.Println("Error decoding invoice response:", err)
 					continue
 				}
 
+				log.Printf("Parsed response data: %+v\n", responseData)
+
+				payURL := ""
+
+				// Попробуем найти pay_url в разных местах
+				if url, ok := responseData["pay_url"].(string); ok {
+					payURL = url
+				} else if result, ok := responseData["result"].(map[string]interface{}); ok {
+					if url, ok := result["pay_url"].(string); ok {
+						payURL = url
+					}
+				}
+
+				log.Printf("Extracted pay_url: %s\n", payURL)
+
+				if payURL == "" {
+					log.Println("Warning: pay_url is empty")
+					continue
+				}
+
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+paymentSum+" рублей.\n\nПерейдите по ссылке для оплаты:")
 				msg.ParseMode = "Markdown"
-				msg.Text += "\n[Оплатить " + paymentSum + " руб.](" + invoiceLink.PayURL + ")"
+				msg.Text += "\n[Оплатить " + paymentSum + " руб.](" + payURL + ")"
 				bot.Send(msg)
 			}
 		}
