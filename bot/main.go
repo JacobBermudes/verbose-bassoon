@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -98,10 +99,18 @@ func main() {
 				}
 				defer internalResp.Body.Close()
 
+				respBody, err := io.ReadAll(internalResp.Body)
+				if err != nil {
+					log.Println("Error reading response body:", err)
+					continue
+				}
+
+				log.Printf("API Response Status: %d, Body: %s\n", internalResp.StatusCode, string(respBody))
+
 				var invoiceLink struct {
 					PayURL string `json:"pay_url"`
 				}
-				err = json.NewDecoder(internalResp.Body).Decode(&invoiceLink)
+				err = json.Unmarshal(respBody, &invoiceLink)
 				if err != nil {
 					log.Println("Error decoding invoice response:", err)
 					continue
