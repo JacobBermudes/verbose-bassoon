@@ -94,20 +94,22 @@ func main() {
 				internalResp, err := http.Post("https://www.phunkao.fun:8443/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
 				if err != nil {
 					log.Println("Error creating invoice:", err)
+					continue
 				}
 				defer internalResp.Body.Close()
 
 				var invoiceLink struct {
-					InvoiceURL string `json:"pay_url"`
+					PayURL string `json:"pay_url"`
 				}
 				err = json.NewDecoder(internalResp.Body).Decode(&invoiceLink)
 				if err != nil {
 					log.Println("Error decoding invoice response:", err)
+					continue
 				}
 
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+paymentSum+" рублей.\n\nПерейдите по ссылке для оплаты:")
 				msg.ParseMode = "Markdown"
-				msg.Text += "\n[Оплатить " + paymentSum + " руб.](" + invoiceLink.InvoiceURL + ")"
+				msg.Text += "\n[Оплатить " + paymentSum + " руб.](" + invoiceLink.PayURL + ")"
 				bot.Send(msg)
 			}
 		}
