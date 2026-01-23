@@ -45,6 +45,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("Received API request: %+v\n", req)
+
 	if req.VbMethod != "createInvoice" {
 		http.Error(w, "Unsupported vbMethod", http.StatusBadRequest)
 		return
