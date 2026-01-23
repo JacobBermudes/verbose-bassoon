@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -78,12 +77,13 @@ func main() {
 				paymentSum := strings.TrimSpace(update.Message.Text)
 
 				var createInvoiceResp struct {
-					Amount   int64  `json:"amount"`
-					Uid      string `json:"uid"`
-					VbMethod string `json:"vbMethod"`
+					Amount   float64 `json:"amount"`
+					Uid      int64   `json:"uid"`
+					VbMethod string  `json:"vbMethod"`
 				}
-				createInvoiceResp.Amount, _ = strconv.ParseInt(paymentSum, 10, 64)
-				createInvoiceResp.Uid = fmt.Sprint(update.Message.From.ID)
+				amount, _ := strconv.ParseInt(paymentSum, 10, 64)
+				createInvoiceResp.Amount = float64(amount)
+				createInvoiceResp.Uid = update.Message.From.ID
 				createInvoiceResp.VbMethod = "createInvoice"
 
 				// Call API to create invoice
