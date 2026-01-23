@@ -161,7 +161,7 @@ func main() {
 			if len(cbDataParts) == 2 {
 				switch cbDataParts[0] + ":" + cbDataParts[1] {
 				case "payments:cb":
-					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 100 руб.):")
+					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
 					input_sum_msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, Selective: true}
 					bot.Send(input_sum_msg)
 				}
