@@ -3,20 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"verbose-bassoon/api/moolah"
 )
-
-func echoHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading body", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write(body)
-}
 
 func balanceHandler(w http.ResponseWriter, r *http.Request) {
 	uid := r.URL.Query().Get("uid")
@@ -44,10 +33,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Received API request: %+v\n", req)
 
-	if req.VbMethod == "createInvoice" {
+	if req.VbMethod == "createCryptoInvoice" {
 		invoiceLink, err := moolah.MakeInvoice(req)
 
-		returnCode := http.StatusOK; if err != nil { returnCode = http.StatusInternalServerError }
+		returnCode := http.StatusOK
+		if err != nil {
+			returnCode = http.StatusInternalServerError
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(returnCode)
@@ -72,32 +64,7 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func makeInvoiceHandler(w http.ResponseWriter, r *http.Request) {
-
-	var req struct {
-		Amount float64 `json:"amount"`
-		UserID int64   `json:"user_id"`
-	}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
-		return
-	}
-
-	invoiceID := req.UserID*1000 + int64(req.Amount*100)
-	resp := struct {
-		InvoiceID int64  `json:"invoice_id"`
-		PayURL    string `json:"pay_url"`
-	}{
-		InvoiceID: invoiceID,
-		PayURL:    fmt.Sprintf("https://crypto.payments.example/invoice/%d", invoiceID),
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
-}
-
 func main() {
-	http.HandleFunc("/vb-api", echoHandler)
 	http.HandleFunc("/vb-api/balance", balanceHandler)
 	http.HandleFunc("/vb-api/crypto-hook", cryptoHookHandler)
 	http.HandleFunc("/vb-api/v1", apiHandler)

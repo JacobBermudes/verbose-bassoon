@@ -1,9 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -74,69 +71,18 @@ func main() {
 
 		if update.Message != nil && update.Message.ReplyToMessage != nil {
 			if update.Message.ReplyToMessage.Text == "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):" {
+
 				paymentSum := strings.TrimSpace(update.Message.Text)
+				amount, err := strconv.ParseFloat(paymentSum, 64)
 
-				var createInvoiceResp struct {
-					Amount   float64 `json:"amount"`
-					Uid      int64   `json:"uid"`
-					VbMethod string  `json:"vbMethod"`
-				}
-				amount, _ := strconv.ParseInt(paymentSum, 10, 64)
-				createInvoiceResp.Amount = float64(amount)
-				createInvoiceResp.Uid = update.Message.From.ID
-				createInvoiceResp.VbMethod = "createInvoice"
-
-				// Call API to create invoice
-				payloadBytes, err := json.Marshal(createInvoiceResp)
-				if err != nil {
-					log.Println("Error encoding JSON:", err)
-					continue
-				}
-				internalResp, err := http.Post("https://www.phunkao.fun:8443/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
-				if err != nil {
-					log.Println("Error creating invoice:", err)
-					continue
-				}
-				defer internalResp.Body.Close()
-
-				respBody, err := io.ReadAll(internalResp.Body)
-				if err != nil {
-					log.Println("Error reading response body:", err)
+				if err != nil || amount < 50 {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+					bot.Send(msg)
 					continue
 				}
 
-				log.Printf("API Response Status: %d, Body: %s\n", internalResp.StatusCode, string(respBody))
+				msg := account.CreateCryptoInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
 
-				var responseData map[string]interface{}
-				err = json.Unmarshal(respBody, &responseData)
-				if err != nil {
-					log.Println("Error decoding invoice response:", err)
-					continue
-				}
-
-				log.Printf("Parsed response data: %+v\n", responseData)
-
-				payURL := ""
-
-				// Попробуем найти pay_url в разных местах
-				if url, ok := responseData["pay_url"].(string); ok {
-					payURL = url
-				} else if result, ok := responseData["result"].(map[string]interface{}); ok {
-					if url, ok := result["pay_url"].(string); ok {
-						payURL = url
-					}
-				}
-
-				log.Printf("Extracted pay_url: %s\n", payURL)
-
-				if payURL == "" {
-					log.Println("Warning: pay_url is empty")
-					continue
-				}
-
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы хотите пополнить баланс на сумму: "+paymentSum+" рублей.\n\nПерейдите по ссылке для оплаты:")
-				msg.ParseMode = "Markdown"
-				msg.Text += "\n[Оплатить " + paymentSum + " руб.](" + payURL + ")"
 				bot.Send(msg)
 			}
 		}
