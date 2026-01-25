@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"verbose-bassoon/api/moolah"
 )
 
 func echoHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,12 +32,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		Uid      int64   `json:"uid"`
 		VbMethod string  `json:"vbMethod"`
 	}
-
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
@@ -47,64 +44,18 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Received API request: %+v\n", req)
 
-	if req.VbMethod != "createInvoice" {
-		http.Error(w, "Unsupported vbMethod", http.StatusBadRequest)
+	if req.VbMethod == "createInvoice" {
+		invoiceLink, err := moolah.MakeInvoice(req)
+
+		returnCode := http.StatusOK; if err != nil { returnCode = http.StatusInternalServerError }
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(returnCode)
+		w.Write([]byte(invoiceLink))
+
 		return
 	}
 
-	// Prepare request to Crypto-Pay API
-	payload := struct {
-		Amount  float64 `json:"amount"`
-		Asset   string  `json:"asset"`
-		Payload string  `json:"payload"`
-	}{
-		Amount:  req.Amount,
-		Asset:   "TON",
-		Payload: fmt.Sprintf("uid:%d", req.Uid),
-	}
-
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		http.Error(w, "Error encoding payload", http.StatusInternalServerError)
-		return
-	}
-
-	// Create request to Crypto-Pay API
-	cryptoBotReq, err := http.NewRequest("POST", "https://pay.crypt.bot/api/createInvoice", bytes.NewBuffer(payloadBytes))
-	if err != nil {
-		http.Error(w, "Error creating request", http.StatusInternalServerError)
-		return
-	}
-
-	// Set headers
-	cryptoBotReq.Header.Set("Content-Type", "application/json")
-	apiKey := os.Getenv("CRYPTO_BOT_APIKEY")
-	if apiKey == "" {
-		http.Error(w, "CRYPTO_BOT_APIKEY not set", http.StatusInternalServerError)
-		return
-	}
-	cryptoBotReq.Header.Set("Crypto-Pay-API-Token", apiKey)
-
-	// Send request
-	client := &http.Client{}
-	cryptoBotResp, err := client.Do(cryptoBotReq)
-	if err != nil {
-		http.Error(w, "Error sending request to Crypto-Pay API", http.StatusInternalServerError)
-		return
-	}
-	defer cryptoBotResp.Body.Close()
-
-	// Read response
-	respBody, err := io.ReadAll(cryptoBotResp.Body)
-	if err != nil {
-		http.Error(w, "Error reading response", http.StatusInternalServerError)
-		return
-	}
-
-	// Send response back
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(cryptoBotResp.StatusCode)
-	w.Write(respBody)
 }
 
 func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
