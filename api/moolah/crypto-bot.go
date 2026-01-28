@@ -19,12 +19,14 @@ func MakeInvoice(reqData struct {
 
 	// Prepare request to Crypto-Pay API
 	payload := struct {
-		Amount  float64 `json:"amount"`
-		Asset   string  `json:"asset"`
-		Payload string  `json:"payload"`
+		CurrencyType string  `json:"currency_type"`
+		Amount       float64 `json:"amount"`
+		Asset        string  `json:"fiat"`
+		Payload      string  `json:"payload"`
 	}{
+		CurrencyType: "fiat",
 		Amount:  reqData.Amount,
-		Asset:   "TON",
+		Asset:   "RUB",
 		Payload: fmt.Sprintf("uid:%d", reqData.Uid),
 	}
 
