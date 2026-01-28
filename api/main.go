@@ -71,7 +71,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		key := "user:" + strconv.FormatInt(req.Uid, 10)
 
 		userExist, err := acc_db.HExists(ctx, key, "created_at").Result()
-		if err != redis.Nil {
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -81,7 +81,11 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = acc_db.HSet(ctx, key, "created_at", regTime, "cid", cid, "balance", 0).Err()
+		if err != nil {
+			fmt.Println(key + " didnt init")
+		}
 		w.WriteHeader(http.StatusOK)
+		fmt.Println(key + " created!")
 		return
 	}
 
