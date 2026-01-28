@@ -47,6 +47,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	key := "user:" + strconv.FormatInt(req.Uid, 10)
+
 	fmt.Printf("Received API request: %+v\n", req)
 
 	if req.VbMethod == "createCryptoInvoice" {
@@ -68,7 +70,6 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 		regTime := time.Now().Format("2006-01-02")
 		cid, _ := strconv.ParseInt(req.Data, 10, 64)
-		key := "user:" + strconv.FormatInt(req.Uid, 10)
 
 		userExist, err := acc_db.HExists(ctx, key, "created_at").Result()
 		if err != nil {
@@ -89,7 +90,20 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Error(w, "Unknown vbMethod", http.StatusBadRequest)
+	if req.VbMethod == "getBalance" {
+		
+		balance, err := acc_db.HGet(ctx, key, "balance").Result()
+		if err != nil {
+			fmt.Printf("Something goes wrong while gettin balance")
+		}
+		
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(balance))
+		
+		return
+	}
+
+	http.Error(w, "Fuck off", http.StatusBadRequest)
 
 }
 

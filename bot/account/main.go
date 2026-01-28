@@ -54,12 +54,23 @@ func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 		fmt.Printf("API_PORT or API_ADDRESS environment variable not setted!\n")
 	}
 
-	balResp, err := http.Get(apiAddres + ":" + apiPort + "/vb-api/balance?uid=" + fmt.Sprint(userID))
-	if err != nil && apiAddres != "" && apiPort != "" {
-		fmt.Println("Error fetching balance:", err)
+	var getBalance struct {
+		Amount   float64 `json:"amount"`
+		Uid      int64   `json:"uid"`
+		VbMethod string  `json:"vbMethod"`
+		Data     string  `json:"data"`
 	}
-	defer balResp.Body.Close()
+	getBalance.Uid = userID
+	getBalance.VbMethod = "getBalance"
 
+	payload, err := json.Marshal(getBalance)
+	if err != nil {
+		fmt.Println("Get balance request JSON marshal error")
+	}
+	balResp, err := http.Post(apiAddres+":"+apiPort+"/vb-api/v1", "application/json", bytes.NewBuffer(payload))
+	if err != nil {
+		fmt.Printf("Fail to req balance from api!")
+	}
 	if balResp.StatusCode != http.StatusOK {
 		fmt.Println("Non-OK HTTP status:", balResp.StatusCode)
 	}
