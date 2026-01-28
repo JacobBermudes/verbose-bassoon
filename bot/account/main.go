@@ -8,12 +8,42 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func main() {
 
+}
+
+func Init(cid int64, uid int64) {
+
+	apiAddres := os.Getenv("API_ADDRESS")
+	apiPort := os.Getenv("API_PORT")
+
+	if apiAddres == "" || apiPort == "" {
+		fmt.Printf("API_PORT or API_ADDRESS environment variable not setted!\n")
+	}
+
+	var accInitReq struct {
+		Amount   float64 `json:"amount"`
+		Uid      int64   `json:"uid"`
+		VbMethod string  `json:"vbMethod"`
+		Data     string  `json:"data"`
+	}
+
+	accInitReq.Amount = 0
+	accInitReq.Uid = uid
+	accInitReq.VbMethod = "accountInit"
+	accInitReq.Data = strconv.FormatInt(cid, 10)
+
+	payload, err := json.Marshal(accInitReq)
+	if err != nil {
+		log.Println("Error encoding JSON:", err)
+	}
+
+	http.Post(apiAddres+":"+apiPort+"/vb-api/v1", "application/json", bytes.NewBuffer(payload))
 }
 
 func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
@@ -81,6 +111,7 @@ func CreateCryptoInvoice(chatID int64, userID int64, amount float64) tgbotapi.Me
 		Amount   float64 `json:"amount"`
 		Uid      int64   `json:"uid"`
 		VbMethod string  `json:"vbMethod"`
+		Data     string  `json:"data"`
 	}
 
 	createInvoiceResp.Amount = amount
@@ -121,8 +152,7 @@ func CreateCryptoInvoice(chatID int64, userID int64, amount float64) tgbotapi.Me
 		log.Println("Warning: pay_url is empty")
 	}
 
-	stringAmount := fmt.Sprintf("%.2f", amount)
-	msg := tgbotapi.NewMessage(chatID, "Вы хотите пополнить баланс на сумму: "+stringAmount+" рублей.\n\nПерейдите по ссылке для оплаты:")
+	msg := tgbotapi.NewMessage(chatID, "Кнопка для оплаты:")
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{

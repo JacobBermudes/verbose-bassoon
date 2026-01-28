@@ -1,11 +1,26 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
+	"time"
 	"verbose-bassoon/api/moolah"
+
+	"github.com/redis/go-redis/v9"
 )
+
+var rdbpass = os.Getenv("REDIS_PASS")
+var ctx = context.Background()
+
+var acc_db = redis.NewClient(&redis.Options{
+	Addr:     "localhost:6379",
+	DB:       15,
+	Password: rdbpass,
+})
 
 func balanceHandler(w http.ResponseWriter, r *http.Request) {
 	uid := r.URL.Query().Get("uid")
@@ -20,6 +35,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		Amount   float64 `json:"amount"`
 		Uid      int64   `json:"uid"`
 		VbMethod string  `json:"vbMethod"`
+		Data     string  `json:"data"`
 	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -47,6 +63,29 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	if req.VbMethod == "accountInit" {
+
+		regTime := time.Now().Format("2006-01-02")
+		cid, _ := strconv.ParseInt(req.Data, 10, 64)
+		key := "user:" + strconv.FormatInt(req.Uid, 10)
+
+		userExist, err := acc_db.HExists(ctx, key, "created_at").Result()
+		if err != redis.Nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if userExist {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		err = acc_db.HSet(ctx, key, "created_at", regTime, "cid", cid, "balance", 0).Err()
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	http.Error(w, "Unknown vbMethod", http.StatusBadRequest)
 
 }
 

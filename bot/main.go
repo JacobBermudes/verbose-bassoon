@@ -53,6 +53,9 @@ func main() {
 
 		if update.Message != nil && update.Message.IsCommand() {
 			if update.Message.Command() == "start" {
+
+				account.Init(update.Message.Chat.ID, update.Message.From.ID)
+
 				keyboard := tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
 						tgbotapi.NewKeyboardButton("🔌 Магазин"),

@@ -14,6 +14,7 @@ func MakeInvoice(reqData struct {
 	Amount   float64 `json:"amount"`
 	Uid      int64   `json:"uid"`
 	VbMethod string  `json:"vbMethod"`
+	Data     string  `json:"data"`
 }) (string, error) {
 
 	// Prepare request to Crypto-Pay API
