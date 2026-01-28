@@ -13,14 +13,14 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var apiAddres = os.Getenv("API_ADDRESS")
+var apiPort = os.Getenv("API_PORT")
+
 func main() {
 
 }
 
 func Init(cid int64, uid int64) {
-
-	apiAddres := os.Getenv("API_ADDRESS")
-	apiPort := os.Getenv("API_PORT")
 
 	if apiAddres == "" || apiPort == "" {
 		fmt.Printf("API_PORT or API_ADDRESS environment variable not setted!\n")
@@ -48,8 +48,6 @@ func Init(cid int64, uid int64) {
 
 func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 
-	apiAddres := os.Getenv("API_ADDRESS")
-	apiPort := os.Getenv("API_PORT")
 	if apiAddres == "" || apiPort == "" {
 		fmt.Printf("API_PORT or API_ADDRESS environment variable not setted!\n")
 	}
@@ -129,12 +127,11 @@ func CreateCryptoInvoice(chatID int64, userID int64, amount float64) tgbotapi.Me
 	createInvoiceResp.Uid = userID
 	createInvoiceResp.VbMethod = "createCryptoInvoice"
 
-	// Call API to create invoice
 	payloadBytes, err := json.Marshal(createInvoiceResp)
 	if err != nil {
 		log.Println("Error encoding JSON:", err)
 	}
-	internalResp, err := http.Post("https://www.phunkao.fun:8443/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
+	internalResp, err := http.Post(apiAddres+":"+apiPort+"/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		log.Println("Error creating invoice:", err)
 	}

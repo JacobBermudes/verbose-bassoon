@@ -22,13 +22,6 @@ var acc_db = redis.NewClient(&redis.Options{
 	Password: rdbpass,
 })
 
-func balanceHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.URL.Query().Get("uid")
-	var balance int64 = 1122 + int64(len(uid))*33
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(balance)
-}
-
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
@@ -122,7 +115,6 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/vb-api/balance", balanceHandler)
 	http.HandleFunc("/vb-api/crypto-hook", cryptoHookHandler)
 	http.HandleFunc("/vb-api/v1", apiHandler)
 	fmt.Println("Server starting on :8001")
