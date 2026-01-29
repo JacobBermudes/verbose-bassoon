@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+var crptBotURL = os.Getenv("CRYPTO_BOT_URL")
+
 func MakeInvoice(reqData struct {
 	Amount   float64 `json:"amount"`
 	Uid      int64   `json:"uid"`
@@ -36,7 +38,7 @@ func MakeInvoice(reqData struct {
 	}
 
 	// Create request to Crypto-Pay API
-	cryptoBotReq, err := http.NewRequest("POST", "https://pay.crypt.bot/api/createInvoice", bytes.NewBuffer(payloadBytes))
+	cryptoBotReq, err := http.NewRequest("POST", crptBotURL + "/api/createInvoice", bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		return "Error creating request", err
 	}
