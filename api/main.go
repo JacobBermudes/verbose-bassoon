@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -101,16 +102,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
-	var invoice struct {
-		InvoiceID int64  `json:"invoice_id"`
-		Status    string `json:"status"`
-	}
-	err := json.NewDecoder(r.Body).Decode(&invoice)
-	if err != nil {
-		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
-		return
-	}
-	fmt.Printf("Received crypto hook: InvoiceID=%d, Status=%s\n", invoice.InvoiceID, invoice.Status)
+	body, _ := io.ReadAll(r.Body)
+	fmt.Println("Received crypto hook: \n" + string(body))
 	w.WriteHeader(http.StatusOK)
 }
 
