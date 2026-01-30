@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -43,24 +44,24 @@ func main() {
 
 	go func() {
 		type internalSendReq struct {
-			Cid  int64  `json:"cid"`
+			Cid  string `json:"cid"`
 			Text string `json:"text"`
 		}
 
 		http.HandleFunc("/vb-notify", func(w http.ResponseWriter, r *http.Request) {
 			var req internalSendReq
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-				http.Error(w, "bad json", http.StatusBadRequest)
+				fmt.Printf("BAD notify JSON")
 				return
 			}
-			if req.Cid == 0 || strings.TrimSpace(req.Text) == "" {
-				http.Error(w, "missing cid/text", http.StatusBadRequest)
+			if req.Cid == "" || strings.TrimSpace(req.Text) == "" {
+				fmt.Printf("missing cid/text")
 				return
 			}
-			msg := tgbotapi.NewMessage(req.Cid, req.Text)
+			cid, _ := strconv.ParseInt(req.Cid, 10, 64)
+			msg := tgbotapi.NewMessage(cid, req.Text)
 			if _, err := bot.Send(msg); err != nil {
 				log.Println("send fail:", err)
-				http.Error(w, "send fail", http.StatusInternalServerError)
 				return
 			}
 			w.WriteHeader(http.StatusOK)
