@@ -48,10 +48,6 @@ func main() {
 		}
 
 		http.HandleFunc("/vb-notify", func(w http.ResponseWriter, r *http.Request) {
-			if r.Method != http.MethodPost {
-				http.Error(w, "method", http.StatusMethodNotAllowed)
-				return
-			}
 			var req internalSendReq
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, "bad json", http.StatusBadRequest)
