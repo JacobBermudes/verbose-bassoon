@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"verbose-bassoon/bot/account"
 	"verbose-bassoon/bot/shop"
@@ -40,11 +43,35 @@ func main() {
 	updates := bot.ListenForWebhook("/vb-wh")
 
 	go func() {
-		log.Println("Go back listening :8011 (HTTP)")
+		type internalSendReq struct {
+			Cid  string `json:"cid"`
+			Text string `json:"text"`
+		}
+
+		http.HandleFunc("/vb-notify", func(w http.ResponseWriter, r *http.Request) {
+			var req internalSendReq
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				fmt.Printf("BAD notify JSON")
+				return
+			}
+			if req.Cid == "" || strings.TrimSpace(req.Text) == "" {
+				fmt.Printf("missing cid/text")
+				return
+			}
+			cid, _ := strconv.ParseInt(req.Cid, 10, 64)
+			msg := tgbotapi.NewMessage(cid, req.Text)
+			if _, err := bot.Send(msg); err != nil {
+				log.Println("send fail:", err)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok"))
+		})
 
 		if err := http.ListenAndServe(":8011", nil); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
 		}
+		log.Println("Go back listening :8011 (HTTP)")
 	}()
 
 	for update := range updates {
@@ -52,14 +79,17 @@ func main() {
 
 		if update.Message != nil && update.Message.IsCommand() {
 			if update.Message.Command() == "start" {
+
+				account.Init(update.Message.Chat.ID, update.Message.From.ID)
+
 				keyboard := tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Магазин"),
-						tgbotapi.NewKeyboardButton("Профиль"),
+						tgbotapi.NewKeyboardButton("🔌 Магазин"),
+						tgbotapi.NewKeyboardButton("👤 Профиль"),
 					),
 					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Тех.Поддержка"),
-						tgbotapi.NewKeyboardButton("Личный ВПН"),
+						tgbotapi.NewKeyboardButton("🧩 Тех.Поддержка"),
+						tgbotapi.NewKeyboardButton("🕸 Личный ВПН"),
 					),
 				)
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Ты попал в автоматизированный магазин цифровых товаров!")
@@ -68,18 +98,36 @@ func main() {
 			}
 		}
 
+		if update.Message != nil && update.Message.ReplyToMessage != nil {
+			if update.Message.ReplyToMessage.Text == "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):" {
+
+				paymentSum := strings.TrimSpace(update.Message.Text)
+				amount, err := strconv.ParseFloat(paymentSum, 64)
+
+				if err != nil || amount < 50 {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+					bot.Send(msg)
+					continue
+				}
+
+				msg := account.CreateCryptoInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
+
+				bot.Send(msg)
+			}
+		}
+
 		if update.Message != nil {
 			switch update.Message.Text {
-			case "Магазин":
+			case "🔌 Магазин":
 				msg := shop.ShowShopMenu(update.Message.Chat.ID)
 				bot.Send(msg)
-			case "Профиль":
+			case "👤 Профиль":
 				msg := account.ShowAccountInfo(update.Message.Chat.ID, update.Message.From.ID)
 				bot.Send(msg)
-			case "Тех.Поддержка":
+			case "🧩 Тех.Поддержка":
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
 				bot.Send(msg)
-			case "Личный ВПН":
+			case "🕸 Личный ВПН":
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ваш личный VPN менеджер!")
 				keyboard := tgbotapi.NewInlineKeyboardMarkup(
 					tgbotapi.NewInlineKeyboardRow(
@@ -111,6 +159,15 @@ func main() {
 				case "help":
 					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
 					bot.Send(msg)
+				}
+			}
+
+			if len(cbDataParts) == 2 {
+				switch cbDataParts[0] + ":" + cbDataParts[1] {
+				case "payments:cb":
+					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
+					input_sum_msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, Selective: true}
+					bot.Send(input_sum_msg)
 				}
 			}
 

@@ -7,4 +7,5 @@
 
 ## Verbose basson API
 * CRYPTO_BOT_APIKEY
+* CRYPTO_BOT_URL
 * REDIS_PASS
