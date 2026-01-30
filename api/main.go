@@ -30,7 +30,7 @@ type cryptoHook struct {
 
 type cryptoHookPayload struct {
 	HookedPayload string `json:"payload"`
-	Amount        int64  `json:"amount"`
+	Amount        string  `json:"amount"`
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +119,7 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	paidAmount := crptHook.Payload.Amount
+	paidAmount, _ := strconv.ParseInt(crptHook.Payload.Amount, 10, 64)
 	paidUid := crptHook.Payload.HookedPayload
 
 	newBalance, err := acc_db.HIncrBy(ctx, paidUid, "balance", paidAmount).Result()
