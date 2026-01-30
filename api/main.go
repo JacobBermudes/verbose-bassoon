@@ -132,7 +132,7 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 		Text string `json:"text"`
 	}
 	notifyReq.Cid, _ = acc_db.HGet(ctx, paidUid, "cid").Result()
-	notifyReq.Text = fmt.Sprintf("На балик прилетело %d рублей!", newBalance)
+	notifyReq.Text = fmt.Sprintf("Баланс успешно пополнен на %s рублей!\nБаланс: %d", crptHook.Payload.Amount, newBalance)
 	notifyPayload, err := json.Marshal(notifyReq)
 	if err != nil {
 		fmt.Println("Get balance request JSON marshal error")

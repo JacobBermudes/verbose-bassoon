@@ -27,7 +27,7 @@ server {
         proxy_read_timeout 300s;
     }
 
-    location ~ ^/vb-(wh|notify)/ {
+    location /vb-wh {
         proxy_pass http://127.0.0.1:8011;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
