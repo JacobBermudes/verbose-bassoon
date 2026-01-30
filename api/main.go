@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -23,13 +23,23 @@ var acc_db = redis.NewClient(&redis.Options{
 	Password: rdbpass,
 })
 
+type cryptoHook struct {
+	UpdateType string            `json:"update_type"`
+	Payload    cryptoHookPayload `json:"payload"`
+}
+
+type cryptoHookPayload struct {
+	HookedPayload string `json:"payload"`
+	Amount        int64  `json:"amount"`
+}
+
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
-		Amount   float64 `json:"amount"`
-		Uid      int64   `json:"uid"`
-		VbMethod string  `json:"vbMethod"`
-		Data     string  `json:"data"`
+		Amount   int64  `json:"amount"`
+		Uid      int64  `json:"uid"`
+		VbMethod string `json:"vbMethod"`
+		Data     string `json:"data"`
 	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -85,15 +95,15 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.VbMethod == "getBalance" {
-		
+
 		balance, err := acc_db.HGet(ctx, key, "balance").Result()
 		if err != nil {
 			fmt.Printf("Something goes wrong while gettin balance")
 		}
-		
+
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(balance))
-		
+
 		return
 	}
 
@@ -102,8 +112,34 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
-	fmt.Println("Received crypto hook: \n" + string(body))
+	var crptHook cryptoHook
+	err := json.NewDecoder(r.Body).Decode(&crptHook)
+	if err != nil {
+		fmt.Print("Fail to decode body to json obj.BAD JSON")
+		return
+	}
+
+	paidAmount := crptHook.Payload.Amount
+	paidUid := crptHook.Payload.HookedPayload
+
+	newBalance, err := acc_db.HIncrBy(ctx, paidUid, "balance", paidAmount).Result()
+	if err != nil {
+		fmt.Printf("FAILED TO INCR BALANCE")
+	}
+
+	var notifyReq struct {
+		Cid  string `json:"cid"`
+		Text string `json:"text"`
+	}
+	notifyReq.Cid, _ = acc_db.HGet(ctx, paidUid, "cid").Result()
+	notifyReq.Text = fmt.Sprintf("На балик прилетело %d рублей!", newBalance)
+	notifyPayload, err := json.Marshal(notifyReq)
+	if err != nil {
+		fmt.Println("Get balance request JSON marshal error")
+	}
+
+	http.Post("http://127.0.0.1:8011/vb-notify", "application/json", bytes.NewBuffer(notifyPayload))
+
 	w.WriteHeader(http.StatusOK)
 }
 

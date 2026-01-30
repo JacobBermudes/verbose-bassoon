@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -41,11 +42,39 @@ func main() {
 	updates := bot.ListenForWebhook("/vb-wh")
 
 	go func() {
-		log.Println("Go back listening :8011 (HTTP)")
+		type internalSendReq struct {
+			Cid  int64  `json:"cid"`
+			Text string `json:"text"`
+		}
+
+		http.HandleFunc("/vb-notify", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "method", http.StatusMethodNotAllowed)
+				return
+			}
+			var req internalSendReq
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "bad json", http.StatusBadRequest)
+				return
+			}
+			if req.Cid == 0 || strings.TrimSpace(req.Text) == "" {
+				http.Error(w, "missing cid/text", http.StatusBadRequest)
+				return
+			}
+			msg := tgbotapi.NewMessage(req.Cid, req.Text)
+			if _, err := bot.Send(msg); err != nil {
+				log.Println("send fail:", err)
+				http.Error(w, "send fail", http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok"))
+		})
 
 		if err := http.ListenAndServe(":8011", nil); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
 		}
+		log.Println("Go back listening :8011 (HTTP)")
 	}()
 
 	for update := range updates {
