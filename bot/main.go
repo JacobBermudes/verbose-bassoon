@@ -24,7 +24,8 @@ func main() {
 		log.Fatal("TG_BOT_TOKEN environment variable not set")
 	}
 
-	bot, err := tgbotapi.NewBotAPI(token)
+	var err error
+	bot, err = tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Fatal("Bot create FAIL:", err)
 	}
