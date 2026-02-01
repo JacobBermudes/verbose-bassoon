@@ -14,7 +14,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var bot *tgbotapi.BotAPI
 var topupers = make(map[int64]string)
 
 func main() {
@@ -24,8 +23,7 @@ func main() {
 		log.Fatal("TG_BOT_TOKEN environment variable not set")
 	}
 
-	var err error
-	bot, err = tgbotapi.NewBotAPI(token)
+	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Fatal("Bot create FAIL:", err)
 	}
@@ -47,7 +45,29 @@ func main() {
 	updates := bot.ListenForWebhook("/vb-wh")
 
 	go func() {
-		http.HandleFunc("/vb-notify", notifyHandler)
+		http.HandleFunc("/vb-notify", func(w http.ResponseWriter, r *http.Request) {
+			type internalSendReq struct {
+				Cid  string `json:"cid"`
+				Text string `json:"text"`
+			}
+			var req internalSendReq
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				fmt.Printf("BAD notify JSON")
+				return
+			}
+			if req.Cid == "" || strings.TrimSpace(req.Text) == "" {
+				fmt.Printf("missing cid/text")
+				return
+			}
+			cid, _ := strconv.ParseInt(req.Cid, 10, 64)
+			msg := tgbotapi.NewMessage(cid, req.Text)
+			if _, err := bot.Send(msg); err != nil {
+				log.Println("send fail:", err)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok"))
+		})
 
 		if err := http.ListenAndServe(":8011", nil); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
@@ -153,28 +173,4 @@ func main() {
 			bot.Request(callback)
 		}
 	}
-}
-
-func notifyHandler(w http.ResponseWriter, r *http.Request) {
-	type internalSendReq struct {
-		Cid  string `json:"cid"`
-		Text string `json:"text"`
-	}
-	var req internalSendReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		fmt.Printf("BAD notify JSON")
-		return
-	}
-	if req.Cid == "" || strings.TrimSpace(req.Text) == "" {
-		fmt.Printf("missing cid/text")
-		return
-	}
-	cid, _ := strconv.ParseInt(req.Cid, 10, 64)
-	msg := tgbotapi.NewMessage(cid, req.Text)
-	if _, err := bot.Send(msg); err != nil {
-		log.Println("send fail:", err)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("ok"))
 }
