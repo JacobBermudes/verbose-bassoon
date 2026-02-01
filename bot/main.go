@@ -69,6 +69,7 @@ func main() {
 
 			msg := account.CreateCryptoInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
 			bot.Send(msg)
+			return
 		}
 
 		if update.Message != nil && update.Message.IsCommand() {
