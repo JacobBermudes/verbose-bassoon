@@ -14,6 +14,9 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var bot *tgbotapi.BotAPI
+var topupers = make(map[int64]string)
+
 func main() {
 
 	token := os.Getenv("TG_BOT_TOKEN")
@@ -43,30 +46,7 @@ func main() {
 	updates := bot.ListenForWebhook("/vb-wh")
 
 	go func() {
-		type internalSendReq struct {
-			Cid  string `json:"cid"`
-			Text string `json:"text"`
-		}
-
-		http.HandleFunc("/vb-notify", func(w http.ResponseWriter, r *http.Request) {
-			var req internalSendReq
-			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-				fmt.Printf("BAD notify JSON")
-				return
-			}
-			if req.Cid == "" || strings.TrimSpace(req.Text) == "" {
-				fmt.Printf("missing cid/text")
-				return
-			}
-			cid, _ := strconv.ParseInt(req.Cid, 10, 64)
-			msg := tgbotapi.NewMessage(cid, req.Text)
-			if _, err := bot.Send(msg); err != nil {
-				log.Println("send fail:", err)
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("ok"))
-		})
+		http.HandleFunc("/vb-notify", notifyHandler)
 
 		if err := http.ListenAndServe(":8011", nil); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
@@ -76,6 +56,20 @@ func main() {
 
 	for update := range updates {
 		log.Printf("Get update: %+v", update)
+
+		if topupers[update.Message.Chat.ID] == "cb" {
+			paymentSum := strings.TrimSpace(update.Message.Text)
+			amount, err := strconv.ParseFloat(paymentSum, 64)
+
+			if err != nil || amount < 50 {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+				bot.Send(msg)
+				continue
+			}
+
+			msg := account.CreateCryptoInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
+			bot.Send(msg)
+		}
 
 		if update.Message != nil && update.Message.IsCommand() {
 			if update.Message.Command() == "start" {
@@ -94,24 +88,6 @@ func main() {
 				)
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Ты попал в автоматизированный магазин цифровых товаров!")
 				msg.ReplyMarkup = keyboard
-				bot.Send(msg)
-			}
-		}
-
-		if update.Message != nil && update.Message.ReplyToMessage != nil {
-			if update.Message.ReplyToMessage.Text == "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):" {
-
-				paymentSum := strings.TrimSpace(update.Message.Text)
-				amount, err := strconv.ParseFloat(paymentSum, 64)
-
-				if err != nil || amount < 50 {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
-					bot.Send(msg)
-					continue
-				}
-
-				msg := account.CreateCryptoInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
-
 				bot.Send(msg)
 			}
 		}
@@ -165,8 +141,8 @@ func main() {
 			if len(cbDataParts) == 2 {
 				switch cbDataParts[0] + ":" + cbDataParts[1] {
 				case "payments:cb":
+					topupers[update.CallbackQuery.Message.Chat.ID] = "cb"
 					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
-					input_sum_msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, Selective: true}
 					bot.Send(input_sum_msg)
 				}
 			}
@@ -175,4 +151,28 @@ func main() {
 			bot.Request(callback)
 		}
 	}
+}
+
+func notifyHandler(w http.ResponseWriter, r *http.Request) {
+	type internalSendReq struct {
+		Cid  string `json:"cid"`
+		Text string `json:"text"`
+	}
+	var req internalSendReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		fmt.Printf("BAD notify JSON")
+		return
+	}
+	if req.Cid == "" || strings.TrimSpace(req.Text) == "" {
+		fmt.Printf("missing cid/text")
+		return
+	}
+	cid, _ := strconv.ParseInt(req.Cid, 10, 64)
+	msg := tgbotapi.NewMessage(cid, req.Text)
+	if _, err := bot.Send(msg); err != nil {
+		log.Println("send fail:", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
 }
