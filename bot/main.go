@@ -78,20 +78,23 @@ func main() {
 	for update := range updates {
 		log.Printf("Get update: %+v", update)
 
-		topupType, wannaTopup := topupers[update.Message.Chat.ID]
-		if !wannaTopup && topupType == "cryptoBot" {
-			paymentSum := strings.TrimSpace(update.Message.Text)
-			amount, err := strconv.ParseFloat(paymentSum, 64)
+		if update.Message != nil {
+			if topupType, ok := topupers[update.Message.Chat.ID]; ok && topupType == "cryptoBot" {
+				if !update.Message.IsCommand() {
+					paymentSum := strings.TrimSpace(update.Message.Text)
+					amount, err := strconv.ParseFloat(paymentSum, 64)
 
-			if err != nil || amount < 50 {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
-				bot.Send(msg)
-				continue
+					if err != nil || amount < 50 {
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+						bot.Send(msg)
+						continue
+					}
+					msg := account.CreateCryptoBotInvoice(update.Message.Chat.ID, update.Message.From.ID, amount)
+					bot.Send(msg)
+					delete(topupers, update.Message.Chat.ID)
+					continue
+				}
 			}
-
-			msg := account.CreateCryptoBotInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
-			bot.Send(msg)
-			return
 		}
 
 		if update.Message != nil && update.Message.IsCommand() {
