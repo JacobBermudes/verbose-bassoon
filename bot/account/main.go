@@ -114,7 +114,7 @@ func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
 	return msg
 }
 
-func CreateCryptoInvoice(chatID int64, userID int64, amount float64) tgbotapi.MessageConfig {
+func CreateCryptoBotInvoice(chatID int64, userID int64, amount float64) tgbotapi.MessageConfig {
 
 	var createInvoiceResp struct {
 		Amount   float64 `json:"amount"`

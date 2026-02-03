@@ -14,6 +14,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var topupers = make(map[int64]string)
+
 func main() {
 
 	token := os.Getenv("TG_BOT_TOKEN")
@@ -76,20 +78,21 @@ func main() {
 	for update := range updates {
 		log.Printf("Get update: %+v", update)
 
-		// if topupers[update.Message.Chat.ID] != "" {
-		// 	paymentSum := strings.TrimSpace(update.Message.Text)
-		// 	amount, err := strconv.ParseFloat(paymentSum, 64)
+		topupType, wannaTopup := topupers[update.Message.Chat.ID]
+		if !wannaTopup && topupType == "cryptoBot" {
+			paymentSum := strings.TrimSpace(update.Message.Text)
+			amount, err := strconv.ParseFloat(paymentSum, 64)
 
-		// 	if err != nil || amount < 50 {
-		// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
-		// 		bot.Send(msg)
-		// 		continue
-		// 	}
+			if err != nil || amount < 50 {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+				bot.Send(msg)
+				continue
+			}
 
-		// 	msg := account.CreateCryptoInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
-		// 	bot.Send(msg)
-		// 	return
-		// }
+			msg := account.CreateCryptoBotInvoice(update.Message.Chat.ID, update.Message.From.ID, float64(amount))
+			bot.Send(msg)
+			return
+		}
 
 		if update.Message != nil && update.Message.IsCommand() {
 			if update.Message.Command() == "start" {
@@ -161,6 +164,7 @@ func main() {
 			if len(cbDataParts) == 2 {
 				switch cbDataParts[0] + ":" + cbDataParts[1] {
 				case "payments:cb":
+					topupers[update.CallbackQuery.Message.Chat.ID] = "cryptoBot"
 					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
 					bot.Send(input_sum_msg)
 				}
