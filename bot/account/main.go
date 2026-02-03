@@ -46,7 +46,7 @@ func Init(cid int64, uid int64) {
 	http.Post(apiAddres+":"+apiPort+"/vb-api/v1", "application/json", bytes.NewBuffer(payload))
 }
 
-func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
+func ShowAccountInfo(chatID int64, userID int64, username string) tgbotapi.MessageConfig {
 
 	if apiAddres == "" || apiPort == "" {
 		fmt.Printf("API_PORT or API_ADDRESS environment variable not setted!\n")
@@ -79,7 +79,7 @@ func ShowAccountInfo(chatID int64, userID int64) tgbotapi.MessageConfig {
 		fmt.Println("Error decoding balance response:", err)
 	}
 
-	msg := tgbotapi.NewMessage(chatID, "Ваш профиль:\nID пользователя: "+fmt.Sprint(userID)+"\nБаланс: "+fmt.Sprint(balance)+" рублей")
+	msg := tgbotapi.NewMessage(chatID, "Ваш профиль:\n" + username + "("+fmt.Sprint(userID)+")\nБаланс: "+fmt.Sprint(balance)+" рублей")
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
@@ -105,8 +105,9 @@ func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Antpl(Рубли)", "payments:antpl"),
+			tgbotapi.NewInlineKeyboardButtonData("Platega(Рубли)", "payments:pltg"),
 			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT (telegram)", "payments:cb"),
-			tgbotapi.NewInlineKeyboardButtonData("СБП QR", "payments:sbp"),
 		),
 	)
 	msg.ReplyMarkup = keyboard

@@ -79,21 +79,21 @@ func main() {
 		log.Printf("Get update: %+v", update)
 
 		if update.Message != nil {
-			if topupType, ok := topupers[update.Message.Chat.ID]; ok && topupType == "cryptoBot" {
-				if !update.Message.IsCommand() {
-					paymentSum := strings.TrimSpace(update.Message.Text)
-					amount, err := strconv.ParseFloat(paymentSum, 64)
+			topupType, wannaTopup := topupers[update.Message.Chat.ID]
 
-					if err != nil || amount < 50 {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
-						bot.Send(msg)
-						continue
-					}
-					msg := account.CreateCryptoBotInvoice(update.Message.Chat.ID, update.Message.From.ID, amount)
+			if wannaTopup && topupType == "cryptoBot" {
+				paymentSum := strings.TrimSpace(update.Message.Text)
+				amount, err := strconv.ParseFloat(paymentSum, 64)
+
+				if err != nil || amount < 50 {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
 					bot.Send(msg)
-					delete(topupers, update.Message.Chat.ID)
 					continue
 				}
+				msg := account.CreateCryptoBotInvoice(update.Message.Chat.ID, update.Message.From.ID, amount)
+				bot.Send(msg)
+				delete(topupers, update.Message.Chat.ID)
+				continue
 			}
 		}
 
@@ -124,16 +124,23 @@ func main() {
 				msg := shop.ShowShopMenu(update.Message.Chat.ID)
 				bot.Send(msg)
 			case "👤 Профиль":
-				msg := account.ShowAccountInfo(update.Message.Chat.ID, update.Message.From.ID)
+				msg := account.ShowAccountInfo(update.Message.Chat.ID, update.Message.From.ID, update.Message.From.UserName)
 				bot.Send(msg)
 			case "🧩 Тех.Поддержка":
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой!Мы обязательно поможем вам!")
+				msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonURL("Тех.Поддержка", "https://t.me/JessieBlueman"),
+						tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
+					),
+				)
 				bot.Send(msg)
 			case "🕸 Личный ВПН":
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ваш личный VPN менеджер!")
 				keyboard := tgbotapi.NewInlineKeyboardMarkup(
 					tgbotapi.NewInlineKeyboardRow(
 						tgbotapi.NewInlineKeyboardButtonURL("Перейти в VPN Менеджер", "https://t.me/surfboost_bot?start=ref287657335"),
+						tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
 					),
 				)
 				msg.ReplyMarkup = keyboard
@@ -159,7 +166,27 @@ func main() {
 					)
 					bot.Send(editMsg)
 				case "help":
-					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой")
+					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой!Мы обязательно поможем вам!")
+					msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonURL("Тех.Поддержка", "https://t.me/JessieBlueman"),
+							tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
+						),
+					)
+					bot.Send(msg)
+				case "mainmenu":
+					keyboard := tgbotapi.NewReplyKeyboard(
+						tgbotapi.NewKeyboardButtonRow(
+							tgbotapi.NewKeyboardButton("🔌 Магазин"),
+							tgbotapi.NewKeyboardButton("👤 Профиль"),
+						),
+						tgbotapi.NewKeyboardButtonRow(
+							tgbotapi.NewKeyboardButton("🧩 Тех.Поддержка"),
+							tgbotapi.NewKeyboardButton("🕸 Личный ВПН"),
+						),
+					)
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Ты попал в автоматизированный магазин цифровых товаров!")
+					msg.ReplyMarkup = keyboard
 					bot.Send(msg)
 				}
 			}
