@@ -79,7 +79,7 @@ func ShowAccountInfo(chatID int64, userID int64, username string) tgbotapi.Messa
 		fmt.Println("Error decoding balance response:", err)
 	}
 
-	msg := tgbotapi.NewMessage(chatID, "Ваш профиль:\n" + username + "("+fmt.Sprint(userID)+")\nБаланс: "+fmt.Sprint(balance)+" рублей")
+	msg := tgbotapi.NewMessage(chatID, "Ваш профиль: "+username+"("+fmt.Sprint(userID)+")\nБаланс: "+fmt.Sprint(balance)+" рублей")
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
@@ -105,9 +105,11 @@ func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Antpl(Рубли)", "payments:antpl"),
-			tgbotapi.NewInlineKeyboardButtonData("Platega(Рубли)", "payments:pltg"),
-			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT (telegram)", "payments:cb"),
+			tgbotapi.NewInlineKeyboardButtonData("Antpl(Рубли, СБП)", "payments:antpl"),
+			tgbotapi.NewInlineKeyboardButtonData("Platega(Рубли, СБП)", "payments:pltg"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT", "payments:cb"),
 		),
 	)
 	msg.ReplyMarkup = keyboard
