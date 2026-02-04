@@ -92,10 +92,10 @@ func ShowAccountInfo(chatID int64, userID int64, username string) tgbotapi.Messa
 			tgbotapi.NewInlineKeyboardButtonData("💵 Акция «Приведи друга»", "referral"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
+			tgbotapi.NewInlineKeyboardButtonData("⚖️ Юридическая информация", "license"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("⚖️ Юридическая информация", "license"),
+			tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
 		),
 	)
 	msg.ReplyMarkup = keyboard
@@ -113,6 +113,9 @@ func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT", "payments:cb"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
 		),
 	)
 	msg.ReplyMarkup = keyboard
