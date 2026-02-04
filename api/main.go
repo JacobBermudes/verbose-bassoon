@@ -30,7 +30,7 @@ type cryptoHook struct {
 
 type cryptoHookPayload struct {
 	HookedPayload string `json:"payload"`
-	Amount        string  `json:"amount"`
+	Amount        string `json:"amount"`
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +116,13 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&crptHook)
 	if err != nil {
 		fmt.Print("Fail to decode body to json obj.BAD JSON")
+		return
+	}
+
+	updType := crptHook.UpdateType
+	if updType != "paid" {
+		fmt.Print("Unknown upd type WebHooked. Type: " + updType)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
