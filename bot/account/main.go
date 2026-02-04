@@ -108,7 +108,6 @@ func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Antpl(Рубли, СБП)", "payments:antpl"),
 			tgbotapi.NewInlineKeyboardButtonData("Platega(Рубли, СБП)", "payments:pltg"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
