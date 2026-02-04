@@ -164,20 +164,30 @@ func main() {
 					)
 					bot.Send(editMsg)
 				case "help":
-					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Свяжитесь с нашей тех. поддержкой!Мы обязательно поможем вам!")
-					msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					ReplyMarkup := tgbotapi.NewInlineKeyboardMarkup(
 						tgbotapi.NewInlineKeyboardRow(
 							tgbotapi.NewInlineKeyboardButtonURL("Тех.Поддержка", "https://t.me/JessieBlueman"),
 							tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
 						),
 					)
-					bot.Send(msg)
+					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+						update.CallbackQuery.Message.Chat.ID,
+						update.CallbackQuery.Message.MessageID,
+						"Свяжитесь с нашей тех. поддержкой!Мы обязательно поможем вам!",
+						ReplyMarkup,
+					)
+					bot.Send(editMsg)
 				case "mainmenu":
 					msg := account.ShowAccountInfo(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.From.ID, update.CallbackQuery.Message.From.UserName)
-					bot.Send(msg)
+					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+						update.CallbackQuery.Message.Chat.ID,
+						update.CallbackQuery.Message.MessageID,
+						msg.Text,
+						msg.ReplyMarkup.(tgbotapi.InlineKeyboardMarkup),
+					)
+					bot.Send(editMsg)
 				case "license":
-					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "\nВсе услуги предоставляются в соответствии с законодательством РФ.")
-					msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					ReplyMarkup := tgbotapi.NewInlineKeyboardMarkup(
 						tgbotapi.NewInlineKeyboardRow(
 							tgbotapi.NewInlineKeyboardButtonURL("🗂Политика конфиденциальности", "https://telegra.ph/Politika-konfidencialnosti-08-15-17"),
 							tgbotapi.NewInlineKeyboardButtonURL("🪪Пользовательское соглашение", "https://telegra.ph/Polzovatelskoe-soglashenie-08-15-10"),
@@ -186,7 +196,13 @@ func main() {
 							tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
 						),
 					)
-					bot.Send(msg)
+					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+						update.CallbackQuery.Message.Chat.ID,
+						update.CallbackQuery.Message.MessageID,
+						"\nВсе услуги предоставляются в соответствии с законодательством РФ.",
+						ReplyMarkup,
+					)
+					bot.Send(editMsg)
 				}
 			}
 
