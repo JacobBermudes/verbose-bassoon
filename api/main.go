@@ -53,7 +53,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := "user:" + strconv.FormatInt(req.Uid, 10)
 
-	fmt.Printf("Received API request: %+v\n", req)
+	fmt.Printf("\nReceived API request: %+v\n", req)
 
 	if req.VbMethod == "createCryptoInvoice" {
 		invoiceLink, err := moolah.MakeInvoice(req)
@@ -120,8 +120,8 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updType := crptHook.UpdateType
-	if updType != "invoice_paidReceived" {
-		fmt.Print("Unknown upd type WebHooked. Type: " + updType)
+	if updType != "invoice_paid" {
+		fmt.Println("Unknown upd type WebHooked. Type: " + updType)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
