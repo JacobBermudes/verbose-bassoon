@@ -173,7 +173,7 @@ func main() {
 					)
 					bot.Send(msg)
 				case "mainmenu":
-					msg := account.ShowAccountInfo(update.CallbackQuery.Message.Chat.ID, update.Message.From.ID, update.Message.From.UserName)
+					msg := account.ShowAccountInfo(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.From.ID, update.CallbackQuery.Message.From.UserName)
 					bot.Send(msg)
 				case "license":
 					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "\nВсе услуги предоставляются в соответствии с законодательством РФ.")

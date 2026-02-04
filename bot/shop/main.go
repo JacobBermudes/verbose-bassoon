@@ -11,8 +11,8 @@ func ShowShopMenu(chatID int64) tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(chatID, "Добро пожаловать в магазин! Выберите категорию товара:")
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Stars", "category_stars"),
-			tgbotapi.NewInlineKeyboardButtonData("Accounts", "category_accounts"),
+			tgbotapi.NewInlineKeyboardButtonData("⭐️ Stars", "category_stars"),
+			tgbotapi.NewInlineKeyboardButtonData("🎁 Accounts", "category_accounts"),
 		),
 	)
 	msg.ReplyMarkup = keyboard
