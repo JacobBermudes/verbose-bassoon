@@ -120,7 +120,7 @@ func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updType := crptHook.UpdateType
-	if updType != "paid" {
+	if updType != "invoice_paidReceived" {
 		fmt.Print("Unknown upd type WebHooked. Type: " + updType)
 		w.WriteHeader(http.StatusOK)
 		return
