@@ -155,9 +155,7 @@ func main() {
 			if len(cbDataParts) == 1 {
 				switch cbDataParts[0] {
 				case "payments":
-
 					msg := account.ShowPaymentMenu(update.CallbackQuery.Message.Chat.ID)
-
 					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
 						update.CallbackQuery.Message.Chat.ID,
 						update.CallbackQuery.Message.MessageID,
@@ -175,18 +173,19 @@ func main() {
 					)
 					bot.Send(msg)
 				case "mainmenu":
-					keyboard := tgbotapi.NewReplyKeyboard(
-						tgbotapi.NewKeyboardButtonRow(
-							tgbotapi.NewKeyboardButton("🔌 Магазин"),
-							tgbotapi.NewKeyboardButton("👤 Профиль"),
+					msg := account.ShowAccountInfo(update.Message.Chat.ID, update.Message.From.ID, update.Message.From.UserName)
+					bot.Send(msg)
+				case "license":
+					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "\nВсе услуги предоставляются в соответствии с законодательством РФ.")
+					msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonURL("🗂Политика конфиденциальности", "https://telegra.ph/Politika-konfidencialnosti-08-15-17"),
+							tgbotapi.NewInlineKeyboardButtonURL("🪪Пользовательское соглашение", "https://telegra.ph/Polzovatelskoe-soglashenie-08-15-10"),
 						),
-						tgbotapi.NewKeyboardButtonRow(
-							tgbotapi.NewKeyboardButton("🧩 Тех.Поддержка"),
-							tgbotapi.NewKeyboardButton("🕸 Личный ВПН"),
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
 						),
 					)
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Ты попал в автоматизированный магазин цифровых товаров!")
-					msg.ReplyMarkup = keyboard
 					bot.Send(msg)
 				}
 			}
