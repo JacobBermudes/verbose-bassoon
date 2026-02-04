@@ -178,7 +178,7 @@ func main() {
 					)
 					bot.Send(editMsg)
 				case "mainmenu":
-					msg := account.ShowAccountInfo(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.From.ID, update.CallbackQuery.Message.From.UserName)
+					msg := account.ShowAccountInfo(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.From.ID, update.CallbackQuery.From.UserName)
 					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
 						update.CallbackQuery.Message.Chat.ID,
 						update.CallbackQuery.Message.MessageID,
