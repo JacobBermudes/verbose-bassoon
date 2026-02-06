@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	"verbose-bassoon/api/moolah"
 
@@ -116,27 +117,37 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
-	signature := r.Header.Get("crypto-pay-api-signature")
-	if signature == "" {
-		fmt.Print("missing crypto-pay-api-signature header")
-		return
-	}
+	signature := strings.TrimSpace(r.Header.Get("crypto-pay-api-signature"))
 	bodyBytes, err := io.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
 		fmt.Printf("cannot read body: %s", err)
 		return
-	}	
-	mac := hmac.New(sha256.New, []byte(os.Getenv("CRYPTO_BOT_APIKEY")))
-	mac.Write(bodyBytes)
-	expected := hex.EncodeToString(mac.Sum(nil))
-	received := signature
-	valid := hmac.Equal([]byte(expected), []byte(received))
-	
-	if !valid {
-		fmt.Print("Wrong sign DETECTED")
+	}
+
+	token := os.Getenv("CRYPTO_BOT_APIKEY")
+	if token == "" {
+		fmt.Print("CRYPTO_BOT_APIKEY not set")
 		return
 	}
+	secret := sha256.Sum256([]byte(token)) 
+	mac := hmac.New(sha256.New, secret[:])
+	mac.Write(bodyBytes)
+	expectedRaw := mac.Sum(nil)
+
+	if strings.HasPrefix(strings.ToLower(signature), "sha256=") {
+		signature = signature[len("sha256="):]
+	}
+	decoded, derr := hex.DecodeString(strings.TrimSpace(signature))
+	if derr != nil {
+		fmt.Printf("invalid signature header (not hex): %v\n", derr)
+		return
+	}
+	if !hmac.Equal(decoded, expectedRaw) {
+		fmt.Printf("crypto hook signature mismatch: got=%s expected_prefix=%x...\n", signature, expectedRaw[:6])
+		return
+	}
+
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	var crptHook cryptoHook
