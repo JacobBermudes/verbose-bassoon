@@ -3,8 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -112,10 +116,33 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cryptoHookHandler(w http.ResponseWriter, r *http.Request) {
-	var crptHook cryptoHook
-	err := json.NewDecoder(r.Body).Decode(&crptHook)
+	signature := r.Header.Get("crypto-pay-api-signature")
+	if signature == "" {
+		fmt.Print("missing crypto-pay-api-signature header")
+		return
+	}
+	bodyBytes, err := io.ReadAll(r.Body)
+	r.Body.Close()
 	if err != nil {
-		fmt.Print("Fail to decode body to json obj.BAD JSON")
+		fmt.Printf("cannot read body: %s", err)
+		return
+	}	
+	mac := hmac.New(sha256.New, []byte(os.Getenv("CRYPTO_BOT_APIKEY")))
+	mac.Write(bodyBytes)
+	expected := hex.EncodeToString(mac.Sum(nil))
+	received := signature
+	valid := hmac.Equal([]byte(expected), []byte(received))
+	
+	if !valid {
+		fmt.Print("Wrong sign DETECTED")
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	var crptHook cryptoHook
+	err = json.NewDecoder(r.Body).Decode(&crptHook)
+	if err != nil {
+		fmt.Printf("Fail to decode body to json obj.BAD JSON")
 		return
 	}
 
