@@ -70,7 +70,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(returnCode)
-		w.Write(cryptoAmount)
+		w.Write([]byte(strconv.FormatFloat(cryptoAmount, 'f', -1, 64)))
 
 		return
 	}

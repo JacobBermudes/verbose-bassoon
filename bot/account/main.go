@@ -210,7 +210,7 @@ func CreateCryptoExchange(chatID int64, userID int64, amount float64, coin strin
 		log.Println("Error reading response body:", err)
 	}
 
-	msg := tgbotapi.NewMessage(chatID, "Ожидаем на оплату "+string(respBody)+" "+coin)
+	msg := tgbotapi.NewMessage(chatID, "Ожидаем на оплату "+string(respBody)+" в "+coin)
 	msg.ParseMode = "Markdown"
 
 	return msg
