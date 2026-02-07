@@ -60,6 +60,21 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("\nReceived API request: %+v\n", req)
 
+	if req.VbMethod == "createCryptoExchange" {
+		cryptoAmount, err := moolah.Cmc_getPriceRub(float64(req.Amount), req.Data)
+
+		returnCode := http.StatusOK
+		if err != nil {
+			returnCode = http.StatusInternalServerError
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(returnCode)
+		w.Write(cryptoAmount)
+
+		return
+	}
+
 	if req.VbMethod == "createCryptoInvoice" {
 		invoiceLink, err := moolah.MakeInvoice(req)
 

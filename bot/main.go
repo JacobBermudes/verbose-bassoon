@@ -95,6 +95,22 @@ func main() {
 				delete(topupers, update.Message.Chat.ID)
 				continue
 			}
+
+			if wannaTopup && topupType == "crypto" {
+				paymentSum := strings.TrimSpace(update.Message.Text)
+				amount, err := strconv.ParseFloat(paymentSum, 64)
+				
+				if err != nil || amount < 50 {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+					bot.Send(msg)
+					continue
+				}
+				
+				msg := account.CreateCryptoExchange(update.Message.Chat.ID, update.Message.From.ID, amount, "TON")
+				bot.Send(msg)
+				delete(topupers, update.Message.Chat.ID)
+				continue
+			}
 		}
 
 		if update.Message != nil && update.Message.IsCommand() {
@@ -210,6 +226,10 @@ func main() {
 				switch cbDataParts[0] + ":" + cbDataParts[1] {
 				case "payments:cb":
 					topupers[update.CallbackQuery.Message.Chat.ID] = "cryptoBot"
+					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
+					bot.Send(input_sum_msg)
+				case "payments:crypto":
+					topupers[update.CallbackQuery.Message.Chat.ID] = "crypto"
 					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
 					bot.Send(input_sum_msg)
 				}

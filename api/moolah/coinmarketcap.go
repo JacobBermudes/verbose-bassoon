@@ -22,13 +22,13 @@ type Quote struct {
 	LastUpdate string  `json:"last_updated"`
 }
 
-func Cmc_getPriceRub(amount float64, crypto string) (float64, error) {
+func Cmc_getPriceRub(amount float64, coin string) (float64, error) {
 	client := &http.Client{}
 
 	params := url.Values{}
 	params.Add("amount", fmt.Sprintf("%.2f", amount))
 	params.Add("symbol", "RUB")
-	params.Add("convert", crypto)
+	params.Add("convert", coin)
 
 	req, err := http.NewRequest("GET", "https://pro-api.coinmarketcap.com/v2/tools/price-conversion", nil)
 	if err != nil {
@@ -59,7 +59,7 @@ func Cmc_getPriceRub(amount float64, crypto string) (float64, error) {
 		return 0, err
 	}
 
-	cryptoAmount := result.Data.Quote[crypto]
+	cryptoAmount := result.Data.Quote[coin]
 
 	return cryptoAmount.Price, nil
 }
