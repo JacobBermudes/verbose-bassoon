@@ -63,7 +63,8 @@ func Cmc_getPriceRub(amount float64, coin string) (float64, error) {
 		return 0, err
 	}
 
-	cryptoAmount := result.Data[0].Quote.Items[coin]
+	cryptoAmount := result.Data[0].Quote.Items[coin].Price
+	fmt.Printf("Get rate from CCM. Amount: %f\n", cryptoAmount)
 
-	return cryptoAmount.Price, nil
+	return cryptoAmount, nil
 }
