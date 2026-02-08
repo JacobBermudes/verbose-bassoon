@@ -55,7 +55,9 @@ func Cmc_getPriceRub(amount float64, coin string) (float64, error) {
 
 	var result CMCPriceConversionResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		fmt.Printf("Ошибка разбора JSON: %v\n", err)
+		fmt.Printf("Fail unmarshal JSON: %v\n", err)
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Response:\n %s", bodyBytes)
 		return 0, err
 	}
 
