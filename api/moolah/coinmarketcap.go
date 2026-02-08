@@ -15,11 +15,8 @@ type cmc_rate_r struct {
 	Data []rates `json:"data"`
 }
 type rates struct {
-	ID    float64 `json:"id"`
-	Quote Quote   `json:"quote"`
-}
-type Quote struct {
-	Items map[string]coin_rate `json:"quote"`
+	ID    float64              `json:"id"`
+	Quote map[string]coin_rate `json:"quote"`
 }
 type coin_rate struct {
 	Price      float64 `json:"price"`
@@ -63,7 +60,7 @@ func Cmc_getPriceRub(amount float64, coin string) (float64, error) {
 		return 0, err
 	}
 
-	cryptoAmount := result.Data[0].Quote.Items[coin].Price
+	cryptoAmount := result.Data[0].Quote[coin].Price
 	fmt.Printf("Get rate from CCM. Amount: %f\n", cryptoAmount)
 
 	return cryptoAmount, nil
