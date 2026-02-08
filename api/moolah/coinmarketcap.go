@@ -11,13 +11,17 @@ import (
 
 var CMC_KEY = os.Getenv("COIN_MC_APIKEY")
 
-type CMCPriceConversionResponse struct {
-	Data struct {
-		Amount float64          `json:"amount"`
-		Quote  map[string]Quote `json:"quote"`
-	} `json:"data"`
+type cmc_rate_r struct {
+	Data []rates `json:"data"`
+}
+type rates struct {
+	ID    float64 `json:"id"`
+	Quote Quote   `json:"quote"`
 }
 type Quote struct {
+	Items map[string]coin_rate `json:"quote"`
+}
+type coin_rate struct {
 	Price      float64 `json:"price"`
 	LastUpdate string  `json:"last_updated"`
 }
@@ -53,15 +57,13 @@ func Cmc_getPriceRub(amount float64, coin string) (float64, error) {
 		return 0, fmt.Errorf("non-OK HTTP status: %s", resp.Status)
 	}
 
-	var result CMCPriceConversionResponse
+	var result cmc_rate_r
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		fmt.Printf("Fail unmarshal JSON: %v\n", err)
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		fmt.Printf("Response:\n %s", bodyBytes)
 		return 0, err
 	}
 
-	cryptoAmount := result.Data.Quote[coin]
+	cryptoAmount := result.Data[0].Quote.Items[coin]
 
 	return cryptoAmount.Price, nil
 }
