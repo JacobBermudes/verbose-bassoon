@@ -15,6 +15,7 @@ import (
 )
 
 var topupers = make(map[int64]string)
+var exchangers = make(map[int64]string)
 
 func main() {
 
@@ -96,19 +97,21 @@ func main() {
 				continue
 			}
 
-			if wannaTopup && topupType == "crypto" {
+			coinToTopup, coinSelected := exchangers[update.Message.Chat.ID]
+			if wannaTopup && topupType == "crypto" && coinSelected {
 				paymentSum := strings.TrimSpace(update.Message.Text)
 				amount, err := strconv.ParseFloat(paymentSum, 64)
-				
+
 				if err != nil || amount < 50 {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: введите корректную сумму (число не менее 50).")
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! введите корректную сумму (число не менее 50).")
 					bot.Send(msg)
 					continue
 				}
-				
-				msg := account.CreateCryptoExchange(update.Message.Chat.ID, update.Message.From.ID, amount, "TON")
+
+				msg := account.CreateCryptoExchange(update.Message.Chat.ID, update.Message.From.ID, amount, coinToTopup)
 				bot.Send(msg)
 				delete(topupers, update.Message.Chat.ID)
+				delete(exchangers, update.Message.Chat.ID)
 				continue
 			}
 		}
@@ -229,10 +232,24 @@ func main() {
 					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
 					bot.Send(input_sum_msg)
 				case "payments:crypto":
-					topupers[update.CallbackQuery.Message.Chat.ID] = "crypto"
-					input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
-					bot.Send(input_sum_msg)
+					coinChooser := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выберете валюту оплаты:")
+					coinChooser.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonData("TON", "payments:crypto:TON"),
+							tgbotapi.NewInlineKeyboardButtonData("USDT(TRX)", "payments:crypto:USDT"),
+							tgbotapi.NewInlineKeyboardButtonData("TRX", "payments:crypto:TRX"),
+							tgbotapi.NewInlineKeyboardButtonData("BTC", "payments:crypto:BTC"),
+						),
+					)
+					bot.Send(coinChooser)
 				}
+			}
+
+			if len(cbDataParts) == 3 {
+				topupers[update.CallbackQuery.Message.Chat.ID] = "crypto"
+				exchangers[update.CallbackQuery.Message.Chat.ID] = cbDataParts[2]
+				input_sum_msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Введите сумму для пополнения баланса в рублях (мин. 50 руб.):")
+				bot.Send(input_sum_msg)
 			}
 
 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
