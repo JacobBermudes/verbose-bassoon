@@ -1,6 +1,10 @@
+
+# Dependencies for api and crypto daemon
+* Redis
+
 # env:
 
-## Verbose basson daemon
+## Verbose basson tg-bot daemon
 * TG_BOT_TOKEN
 * API_ADDRESS
 * API_PORT
@@ -11,4 +15,8 @@
 * REDIS_PASS
 * COIN_MC_APIKEY
 * FFIO_APIKEY
+* FFIO_SECRET
 * TON_ADDRESS
+
+## Verbose basson crypto daemon
+* REDIS_PASS
