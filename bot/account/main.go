@@ -111,7 +111,8 @@ func ShowPaymentMenu(chatID int64) tgbotapi.MessageConfig {
 			tgbotapi.NewInlineKeyboardButtonData("Platega(Рубли, СБП)", "payments:pltg"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT", "payments:cb"),
+			tgbotapi.NewInlineKeyboardButtonData("Crypto BOT (TG)", "payments:cb"),
+			tgbotapi.NewInlineKeyboardButtonData("Crypto", "payments:crypto"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "mainmenu"),
@@ -177,6 +178,40 @@ func CreateCryptoBotInvoice(chatID int64, userID int64, amount float64) tgbotapi
 			},
 		},
 	}
+
+	return msg
+}
+
+func CreateCryptoExchange(chatID int64, userID int64, amount float64, coin string) tgbotapi.MessageConfig {
+	var createExchangeResp struct {
+		Amount   float64 `json:"amount"`
+		Uid      int64   `json:"uid"`
+		VbMethod string  `json:"vbMethod"`
+		Data     string  `json:"data"`
+	}
+
+	createExchangeResp.Amount = amount
+	createExchangeResp.Uid = userID
+	createExchangeResp.VbMethod = "createCryptoExchange"
+	createExchangeResp.Data = coin
+
+	payloadBytes, err := json.Marshal(createExchangeResp)
+	if err != nil {
+		log.Println("Error encoding JSON:", err)
+	}
+	internalResp, err := http.Post(apiAddres+":"+apiPort+"/vb-api/v1", "application/json", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		log.Println("Error creating exchange:", err)
+	}
+	defer internalResp.Body.Close()
+
+	respBody, err := io.ReadAll(internalResp.Body)
+	if err != nil {
+		log.Println("Error reading response body:", err)
+	}
+
+	msg := tgbotapi.NewMessage(chatID, "Ожидаем от вас на оплату "+string(respBody)+" в "+coin)
+	msg.ParseMode = "Markdown"
 
 	return msg
 }
